@@ -40,4 +40,24 @@ router.post('/add', upload.single('image'), async (req, res) => {
 	}
 })
 
+// Delete news by ID
+router.delete('/delete/:id', async (req, res) => {
+	try {
+		const newsId = req.params.id
+
+		// Check if the news exists
+		const existingNews = await News.findById(newsId)
+		if (!existingNews) {
+			return res.status(404).json({ error: 'News not found' })
+		}
+
+		// Delete the news
+		await News.findByIdAndDelete(newsId)
+
+		res.json({ message: 'News deleted successfully' })
+	} catch (error) {
+		res.status(500).json({ error: error.message })
+	}
+})
+
 module.exports = router
