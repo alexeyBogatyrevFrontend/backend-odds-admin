@@ -6,7 +6,7 @@ const multer = require('multer')
 router.get('/all', async (req, res) => {
 	try {
 		const allNews = await News.find()
-		res.json(allNews)
+		res.json(allNews.reverse())
 	} catch (error) {
 		res.status(500).json({ error: error.message })
 	}
@@ -36,7 +36,7 @@ router.post('/add', upload.single('image'), async (req, res) => {
 		const savedNews = await news.save()
 		const allNews = await News.find()
 
-		res.json(allNews)
+		res.json(allNews.reverse())
 	} catch (error) {
 		res.status(500).json({ error: error.message })
 	}
@@ -75,7 +75,7 @@ router.put('/edit/:id', upload.single('image'), async (req, res) => {
 		const updatedNews = await existingNews.save()
 		const allNews = await News.find()
 
-		res.json(allNews)
+		res.json(allNews.reverse())
 	} catch (error) {
 		res.status(500).json({ error: error.message })
 	}
@@ -96,7 +96,7 @@ router.delete('/delete/:id', async (req, res) => {
 		await News.findByIdAndDelete(newsId)
 		const allNews = await News.find()
 
-		res.json(allNews)
+		res.json(allNews.reverse())
 	} catch (error) {
 		res.status(500).json({ error: error.message })
 	}
