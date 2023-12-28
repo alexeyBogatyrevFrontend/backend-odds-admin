@@ -18,13 +18,13 @@ const upload = multer({ storage: storage })
 
 router.post('/add', upload.single('image'), async (req, res) => {
 	try {
-		const { id, title, description, textEditor, isTop, date } = req.body
+		const { title, description, textEditor, isTop, date } = req.body
 
 		// Access the file data as a Buffer
 		const imageBuffer = req.file ? req.file.buffer : undefined
 
 		const news = new News({
-			id,
+			// id,
 			title,
 			description,
 			textEditor,
@@ -46,7 +46,7 @@ router.post('/add', upload.single('image'), async (req, res) => {
 router.put('/edit/:id', upload.single('image'), async (req, res) => {
 	try {
 		const newsId = req.params.id
-		const { id, title, description, textEditor, isTop, date } = req.body
+		const { title, description, textEditor, isTop, date } = req.body
 
 		// Access the file data as a Buffer if an image is provided
 		const imageBuffer = req.file ? req.file.buffer : undefined
@@ -59,7 +59,7 @@ router.put('/edit/:id', upload.single('image'), async (req, res) => {
 		}
 
 		// Update the news fields
-		existingNews.id = id
+		// existingNews.id = id
 		existingNews.title = title
 		existingNews.description = description
 		existingNews.textEditor = textEditor

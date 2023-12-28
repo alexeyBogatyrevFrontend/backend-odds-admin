@@ -12,7 +12,7 @@ app.use(cors())
 app.use(bodyParser.json({ limit: '5mb' }))
 
 const mongoURI =
-	'mongodb+srv://adminpanel:adminpanel@adminpanel.9vp0jd0.mongodb.net/?retryWrites=true&w=majority'
+	'mongodb+srv://adminpanel:adminpanel@adminpanel.khj0hmz.mongodb.net/?retryWrites=true&w=majority'
 
 mongoose.connect(mongoURI, {
 	useNewUrlParser: true,
