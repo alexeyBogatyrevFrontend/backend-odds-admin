@@ -3,10 +3,45 @@ const router = express.Router()
 const News = require('../models/news.model')
 const multer = require('multer')
 
+// router.get('/all', async (req, res) => {
+// 	try {
+// 		const allNews = await News.find()
+// 		res.json(allNews.reverse())
+// 	} catch (error) {
+// 		res.status(500).json({ error: error.message })
+// 	}
+// })
+
 router.get('/all', async (req, res) => {
 	try {
-		const allNews = await News.find()
-		res.json(allNews.reverse())
+		const page = parseInt(req.query.page) || 1
+		const pageSize = parseInt(req.query.pageSize) || 6
+
+		if (!req.query.page && !req.query.pageSize) {
+			// Если не указаны параметры page и pageSize, вернуть все новости
+			const allNews = await News.find()
+			return res.json(allNews.reverse())
+		}
+
+		const skip = (page - 1) * pageSize
+
+		const allNews = await News.find().skip(skip).limit(pageSize)
+		const totalCount = await News.countDocuments()
+
+		res.json({
+			newsList: allNews.reverse(),
+			totalPages: Math.ceil(totalCount / pageSize),
+			currentPage: page,
+		})
+	} catch (error) {
+		res.status(500).json({ error: error.message })
+	}
+})
+
+router.get('/top', async (req, res) => {
+	try {
+		const topNews = await News.find({ isTop: true })
+		res.json(topNews.reverse())
 	} catch (error) {
 		res.status(500).json({ error: error.message })
 	}
