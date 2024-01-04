@@ -3,14 +3,16 @@ const router = express.Router()
 const News = require('../models/news.model')
 const multer = require('multer')
 
-// router.get('/all', async (req, res) => {
-// 	try {
-// 		const allNews = await News.find()
-// 		res.json(allNews.reverse())
-// 	} catch (error) {
-// 		res.status(500).json({ error: error.message })
-// 	}
-// })
+// Function to calculate total pages
+const getTotalPages = (totalCount, pageSize) => {
+	return Math.ceil(totalCount / pageSize)
+}
+
+// Function to paginate results
+const paginateResults = (results, page, pageSize) => {
+	const skip = (page - 1) * pageSize
+	return results.slice(skip, skip + pageSize)
+}
 
 router.get('/all', async (req, res) => {
 	try {
@@ -40,22 +42,31 @@ router.get('/all', async (req, res) => {
 
 router.get('/top', async (req, res) => {
 	try {
-		const topNews = await News.find({ isTop: true })
-		res.json(topNews.reverse())
+		const page = parseInt(req.query.page) || 1
+		const pageSize = parseInt(req.query.pageSize) || 6
+
+		const skip = (page - 1) * pageSize
+
+		const topNews = await News.find({ isTop: true }).skip(skip).limit(pageSize)
+		const totalCount = await News.countDocuments({ isTop: true })
+
+		res.json({
+			newsList: topNews.reverse(),
+			totalPages: Math.ceil(totalCount / pageSize),
+			currentPage: page,
+		})
 	} catch (error) {
 		res.status(500).json({ error: error.message })
 	}
 })
 
-// Set up multer for handling file uploads
-const storage = multer.memoryStorage() // Store files in memory as Buffer
+const storage = multer.memoryStorage()
 const upload = multer({ storage: storage })
 
 router.post('/add', upload.single('image'), async (req, res) => {
 	try {
 		const { title, description, textEditor, isTop, date } = req.body
 
-		// Access the file data as a Buffer
 		const imageBuffer = req.file ? req.file.buffer : undefined
 
 		const news = new News({
@@ -77,36 +88,29 @@ router.post('/add', upload.single('image'), async (req, res) => {
 	}
 })
 
-// Update news by ID
 router.put('/edit/:id', upload.single('image'), async (req, res) => {
 	try {
 		const newsId = req.params.id
 		const { title, description, textEditor, isTop, date } = req.body
 
-		// Access the file data as a Buffer if an image is provided
 		const imageBuffer = req.file ? req.file.buffer : undefined
 
-		// Find the news by ID
 		const existingNews = await News.findById(newsId)
 
 		if (!existingNews) {
 			return res.status(404).json({ error: 'News not found' })
 		}
 
-		// Update the news fields
-		// existingNews.id = id
 		existingNews.title = title
 		existingNews.description = description
 		existingNews.textEditor = textEditor
 		existingNews.isTop = isTop
 		existingNews.date = date
 
-		// Update the image if provided
 		if (imageBuffer) {
 			existingNews.image = imageBuffer
 		}
 
-		// Save the updated news
 		const updatedNews = await existingNews.save()
 		const allNews = await News.find()
 
@@ -116,22 +120,32 @@ router.put('/edit/:id', upload.single('image'), async (req, res) => {
 	}
 })
 
-// Delete news by ID
 router.delete('/delete/:id', async (req, res) => {
 	try {
 		const newsId = req.params.id
 
-		// Check if the news exists
 		const existingNews = await News.findById(newsId)
 		if (!existingNews) {
 			return res.status(404).json({ error: 'News not found' })
 		}
 
-		// Delete the news
 		await News.findByIdAndDelete(newsId)
-		const allNews = await News.find()
 
-		res.json(allNews.reverse())
+		// Используйте переданные значения currentPage, totalPages и pageSize
+		const currentPage = parseInt(req.query.currentPage) || 1
+		const totalPages = parseInt(req.query.totalPages) || 1
+		const pageSize = parseInt(req.query.pageSize) || 6
+
+		// Пересчитайте количество новостей и верните результат с пагинацией
+		const totalCount = await News.countDocuments()
+		const skip = (currentPage - 1) * pageSize
+		const allNews = await News.find().skip(skip).limit(pageSize)
+
+		res.json({
+			newsList: allNews.reverse(),
+			totalPages: Math.ceil(totalCount / pageSize),
+			currentPage: currentPage,
+		})
 	} catch (error) {
 		res.status(500).json({ error: error.message })
 	}
