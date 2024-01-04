@@ -132,9 +132,40 @@ router.put('/edit/:id', upload.single('image'), async (req, res) => {
 	}
 })
 
+// router.delete('/delete/:id', async (req, res) => {
+// 	try {
+// 		const newsId = req.params.id
+
+// 		const existingNews = await News.findById(newsId)
+// 		if (!existingNews) {
+// 			return res.status(404).json({ error: 'News not found' })
+// 		}
+
+// 		await News.findByIdAndDelete(newsId)
+
+// 		// Используйте переданные значения currentPage, totalPages и pageSize
+// 		const currentPage = parseInt(req.query.currentPage) || 1
+// 		const totalPages = parseInt(req.query.totalPages) || 1
+// 		const pageSize = parseInt(req.query.pageSize) || 6
+
+// 		// Пересчитайте количество новостей и верните результат с пагинацией
+// 		const totalCount = await News.countDocuments()
+// 		const skip = (currentPage - 1) * pageSize
+// 		const allNews = await News.find().skip(skip).limit(pageSize)
+
+// 		res.json({
+// 			newsList: allNews.reverse(),
+// 			totalPages: Math.ceil(totalCount / pageSize),
+// 			currentPage: currentPage,
+// 		})
+// 	} catch (error) {
+// 		res.status(500).json({ error: error.message })
+// 	}
+// })
 router.delete('/delete/:id', async (req, res) => {
 	try {
 		const newsId = req.params.id
+		const isTopNews = req.query.topNews === 'true'
 
 		const existingNews = await News.findById(newsId)
 		if (!existingNews) {
@@ -143,20 +174,30 @@ router.delete('/delete/:id', async (req, res) => {
 
 		await News.findByIdAndDelete(newsId)
 
-		// Используйте переданные значения currentPage, totalPages и pageSize
 		const currentPage = parseInt(req.query.currentPage) || 1
-		const totalPages = parseInt(req.query.totalPages) || 1
+		// const totalPages = parseInt(req.query.totalPages) || 1
 		const pageSize = parseInt(req.query.pageSize) || 6
 
-		// Пересчитайте количество новостей и верните результат с пагинацией
-		const totalCount = await News.countDocuments()
+		// Пересчитайте количество новостей
+		const totalCount = isTopNews
+			? await News.countDocuments({ isTop: true })
+			: await News.countDocuments()
+
+		// Если после удаления текущая страница больше общего количества страниц, установите currentPage равным totalPages
+		// const newCurrentPage = Math.min(currentPage, totalPages)
+
+		// Вычислите новый сдвиг
 		const skip = (currentPage - 1) * pageSize
-		const allNews = await News.find().skip(skip).limit(pageSize)
+
+		// Получите новости для текущей страницы
+		const query = isTopNews ? { isTop: true } : {}
+		const allNews = await News.find(query).skip(skip).limit(pageSize)
 
 		res.json({
 			newsList: allNews.reverse(),
 			totalPages: Math.ceil(totalCount / pageSize),
-			currentPage: currentPage,
+			currentPage,
+			isTopNews,
 		})
 	} catch (error) {
 		res.status(500).json({ error: error.message })
