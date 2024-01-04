@@ -112,9 +112,21 @@ router.put('/edit/:id', upload.single('image'), async (req, res) => {
 		}
 
 		const updatedNews = await existingNews.save()
-		const allNews = await News.find()
+		// const allNews = await News.find()
 
-		res.json(allNews.reverse())
+		// res.json(allNews.reverse())
+		// Используйте переданные значения currentPage и pageSize
+		const currentPage = parseInt(req.query.currentPage) || 1
+		const pageSize = parseInt(req.query.pageSize) || 6
+
+		// Получите новости для текущей страницы
+		const skip = (currentPage - 1) * pageSize
+		const allNews = await News.find().skip(skip).limit(pageSize)
+
+		res.json({
+			newsList: allNews.reverse(),
+			currentPage: currentPage,
+		})
 	} catch (error) {
 		res.status(500).json({ error: error.message })
 	}
