@@ -5,6 +5,7 @@ const Schema = mongoose.Schema
 
 const newsSchema = new Schema(
 	{
+		h1: { type: String, required: true },
 		title: { type: String, required: true },
 		description: { type: String, required: true },
 		textEditor: { type: String, required: true },
